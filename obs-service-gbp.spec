@@ -7,7 +7,9 @@ Summary: OBS service using git-buildpackage
 BuildArch: noarch
 Source: %{name}-%{version}.tar.xz
 
+Requires: git
 Requires: git-buildpackage
+Requires: dpkg
 
 %description
 This OBS service is meant to create debian source packages
