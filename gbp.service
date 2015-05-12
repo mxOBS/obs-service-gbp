@@ -1,0 +1,12 @@
+<service name="gbp">
+  <summary>git-buildpackage based source package downloader</summary>
+  <description>This service uses git-buildpackage to download sources, and create the proper tarballs and build-description file, from git repositories.</description>
+  <parameter name="url">
+    <description>the URL of the git repository to download from</description>
+    <required />
+  </parameter>
+  <parameter name="revision">
+    <description>The GIT revision or branch to use. This has to contain the actual packaging files.</description>
+    <required />
+  </parameter>
+</service>
