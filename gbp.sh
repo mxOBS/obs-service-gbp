@@ -84,7 +84,7 @@ fi
 # build source package
 pushd "repo"
 r=0
-gbp buildpackage --git-force-create --git-ignore-branch --git-builder="dpkg-source -i.git -b ." || r=$?
+gbp buildpackage --git-ignore-branch --git-builder="dpkg-source -i.git -b ." || r=$?
 popd
 if [ $r != 0 ]; then
 	echo "An error occured while creating the source package!"
