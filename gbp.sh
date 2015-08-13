@@ -2,7 +2,7 @@
 
 # parse arguments
 s=0
-OPTIONS=`getopt -n "$0" -o "" -l "outdir:,url:,revision:" -- "$@"` || s=$?
+OPTIONS=`getopt -n "$0" -o "" -l "outdir:,url:,debian-branch:,revision:" -- "$@"` || s=$?
 if [ $s -ne 0 ]; then
 	# usage
 	exit 1
@@ -11,7 +11,8 @@ fi
 # evaluate arguments
 _outdir=
 _url=
-_revision=
+_debianbranch=master
+_revision=HEAD
 eval set -- "$OPTIONS"
 while true; do
 	case $1 in
@@ -21,6 +22,10 @@ while true; do
 			;;
 		--url)
 			_url="$2"
+			shift 2
+			;;
+		--debian-branch)
+			_debianbranch=$2
 			shift 2
 			;;
 		--revision)
@@ -35,7 +40,7 @@ while true; do
 done
 
 # check if all required arguments have been given
-if [ -z "$_outdir" ] || [ -z "$_url" ] || [ -z "$_revision" ]; then
+if [ -z "$_outdir" ] || [ -z "$_url" ]; then
 	echo "Mandatory arguments missing!"
 	exit 1
 fi
@@ -63,7 +68,7 @@ function cleanup() {
 
 # clone repository
 r=0
-git clone "$_url" "repo" || r=$?
+git clone --branch "$_debianbranch" "$_url" "repo" || r=$?
 if [ $r != 0 ]; then
 	echo "An error occured while cloning the remote repository!"
 	cleanup
@@ -81,6 +86,9 @@ if [ $r != 0 ]; then
 	exit 1
 fi
 
+# save a timestamp to decide between new and old files
+touch * timestamp
+
 # build source package
 pushd "repo"
 r=0
@@ -94,7 +102,7 @@ fi
 
 # move created files to outdir
 r=0
-find . -maxdepth 1 -type f -exec mv {} "$_outdir/" \; || r=$?
+find . -maxdepth 1 -type f -cnewer timestamp -exec mv {} "$_outdir/" \; || r=$?
 if [ $r != 0 ]; then
 	echo "An error occured while moving the generated files to their destination!"
 	cleanup

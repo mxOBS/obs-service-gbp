@@ -5,8 +5,10 @@
     <description>the URL of the git repository to download from</description>
     <required />
   </parameter>
+  <parameter name="debian-branch">
+    <description>The GIT branch to use. This has to contain the actual packaging files.</description>
+  </parameter>
   <parameter name="revision">
-    <description>The GIT revision or branch to use. This has to contain the actual packaging files.</description>
-    <required />
+    <description>The GIT commit or tag to use.</description>
   </parameter>
 </service>
