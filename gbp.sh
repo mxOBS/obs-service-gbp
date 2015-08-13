@@ -2,7 +2,7 @@
 
 # parse arguments
 s=0
-OPTIONS=`getopt -n "$0" -o "" -l "outdir:,url:,debian-branch:,revision:" -- "$@"` || s=$?
+OPTIONS=`getopt -n "$0" -o "" -l "outdir:,url:,debian-branch:,revision:,enable-submodules:" -- "$@"` || s=$?
 if [ $s -ne 0 ]; then
 	# usage
 	exit 1
@@ -13,6 +13,7 @@ _outdir=
 _url=
 _debianbranch=master
 _revision=HEAD
+_enablesubmodules=no
 eval set -- "$OPTIONS"
 while true; do
 	case $1 in
@@ -32,6 +33,10 @@ while true; do
 			_revision=$2
 			shift 2
 			;;
+		--enable-submodules)
+			_enablesubmodules=$2
+			shift 2
+			;;
 		--)
 			shift
 			break
@@ -40,8 +45,8 @@ while true; do
 done
 
 # check if all required arguments have been given
-if [ -z "$_outdir" ] || [ -z "$_url" ]; then
-	echo "Mandatory arguments missing!"
+if [ -z "$_outdir" ] || [ -z "$_url" ] || ( [ "x$_enablesubmodules" != "xno" ] && [ "x$_enablesubmodules" != "xyes" ] ) ; then
+	echo "Mandatory arguments missing, or have invalid values!"
 	exit 1
 fi
 
@@ -85,6 +90,19 @@ if [ $r != 0 ]; then
 	cleanup
 	exit 1
 fi
+
+# checkout-out submodules if requested
+pushd "repo"
+if [ "x$_enablesubmodules" = "xyes" ]; then
+	r=0
+	git submodule update --init --depth 1 2>&1 >/dev/null || r=$?
+	if [ $r != 0 ]; then
+		echo "An error occured while checking out submodules!"
+		cleanup
+		exit 1
+	fi
+fi
+popd
 
 # save a timestamp to decide between new and old files
 touch * timestamp

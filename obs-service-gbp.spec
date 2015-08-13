@@ -1,5 +1,5 @@
 Name: obs-service-gbp
-Version: 0.1
+Version: 0.2
 Release: 0
 License: MIT
 Group: Development/Tools/Building
