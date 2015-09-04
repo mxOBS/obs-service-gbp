@@ -80,10 +80,10 @@ if [ $r != 0 ]; then
 	exit 1
 fi
 
-# check out user-select branch/commit/tag
+# check out user-select commit/tag
 pushd "repo"
 r=0
-git checkout $_revision 2>&1 >/dev/null || r=$?
+git checkout -b $_debianbranch-$_revision $_revision 2>&1 >/dev/null || r=$?
 popd
 if [ $r != 0 ]; then
 	echo "An error occured while checking out the requested revision!"
