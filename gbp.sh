@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+set -x
+
 # parse arguments
 s=0
 OPTIONS=`getopt -n "$0" -o "" -l "outdir:,url:,debian-branch:,revision:,enable-submodules:" -- "$@"` || s=$?
@@ -107,8 +109,23 @@ popd
 # save a timestamp to decide between new and old files
 touch * timestamp
 
+# find out source package name and version to guess source folder name
+s=0
+sourcepkgname=$(dpkg-parsechangelog -lrepo/debian/changelog | grep "Source: " | sed -e "s;^Source: ;;") || s=$?
+sourcepkgversion=$(dpkg-parsechangelog -lrepo/debian/changelog | grep "Version: " | sed -e "s;^Version: ;;" -e "s;-*;;g") || s=$?
+if [ $s -eq 0 ]; then
+	# rename folder
+	mv repo $sourcepkgname-$sourcepkgversion
+
+	# and save its name
+	repotree=$sourcepkgname-$sourcepkgversion
+else
+	# if package name or version couldn't be guessed, just continue
+	repotree="repo"
+fi
+
 # build source package
-pushd "repo"
+pushd "$repotree"
 r=0
 gbp buildpackage --git-ignore-branch --git-builder="dpkg-source -i.git -b ." || r=$?
 popd
