@@ -97,7 +97,7 @@ fi
 pushd "repo"
 if [ "x$_enablesubmodules" = "xyes" ]; then
 	r=0
-	git submodule update --init --depth 1 2>&1 >/dev/null || r=$?
+	git submodule update --init 2>&1 >/dev/null || r=$?
 	if [ $r != 0 ]; then
 		echo "An error occured while checking out submodules!"
 		cleanup
