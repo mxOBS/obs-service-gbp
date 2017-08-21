@@ -19,9 +19,7 @@ from repositories compatible with git-buildpackage.
 %setup -q
 
 %install
-install -v -m755 -d %{?buildroot}/usr/lib/obs/service
-install -v -m755 gbp.sh %{?buildroot}/usr/lib/obs/service/gbp
-install -v -m644 gbp.service %{?buildroot}/usr/lib/obs/service
+make DESTDIR=%{?buildroot} install
 
 %files
 %dir /usr/lib/obs
