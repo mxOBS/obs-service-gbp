@@ -75,14 +75,20 @@ if [ $r != 0 ]; then
 	exit 1
 fi
 
+# work in temporary folder
+WORKDIR=$(mktemp -d -p .)
+
+# save a timestamp to decide between new and old files
+TIMESTAMP=$(mktemp -p $WORKDIR)
+
 # cleanup function to use on errors
 function cleanup() {
-	rm -rf *
+	rm -rf $WORKDIR
 }
 
 # clone repository
 r=0
-git clone --branch "$_debianbranch" "$_url" "repo" || r=$?
+git clone --branch "$_debianbranch" "$_url" "$WORKDIR/repo" || r=$?
 if [ $r != 0 ]; then
 	echo "An error occured while cloning the remote repository!"
 	cleanup
@@ -90,7 +96,7 @@ if [ $r != 0 ]; then
 fi
 
 # check out user-select commit/tag
-pushd "repo"
+pushd "$WORKDIR/repo"
 r=0
 git checkout -b $_debianbranch-$_revision $_revision 2>&1 >/dev/null || r=$?
 popd
@@ -101,34 +107,31 @@ if [ $r != 0 ]; then
 fi
 
 # checkout-out submodules if requested
-pushd "repo"
 if [ "x$_enablesubmodules" = "xyes" ]; then
+	pushd "$WORKDIR/repo"
 	r=0
 	git submodule update --init 2>&1 >/dev/null || r=$?
+	popd
 	if [ $r != 0 ]; then
 		echo "An error occured while checking out submodules!"
 		cleanup
 		exit 1
 	fi
 fi
-popd
-
-# save a timestamp to decide between new and old files
-touch * timestamp
 
 # find out source package name and version to guess source folder name
 s=0
-sourcepkgname=$(dpkg-parsechangelog -lrepo/debian/changelog | grep "Source: " | sed -e "s;^Source: ;;") || s=$?
-sourcepkgversion=$(dpkg-parsechangelog -lrepo/debian/changelog | grep "Version: " | sed -e "s;^Version: ;;" -e "s;-*;;g") || s=$?
+sourcepkgname=$(dpkg-parsechangelog -l$WORKDIR/repo/debian/changelog | grep "Source: " | sed -e "s;^Source: ;;") || s=$?
+sourcepkgversion=$(dpkg-parsechangelog -l$WORKDIR/repo/debian/changelog | grep "Version: " | sed -e "s;^Version: ;;" -e "s;-*;;g") || s=$?
 if [ $s -eq 0 ]; then
 	# rename folder
-	mv repo $sourcepkgname-$sourcepkgversion
+	mv "$WORKDIR/repo" "$WORKDIR/$sourcepkgname-$sourcepkgversion"
 
 	# and save its name
-	repotree=$sourcepkgname-$sourcepkgversion
+	repotree="$WORKDIR/$sourcepkgname-$sourcepkgversion"
 else
 	# if package name or version couldn't be guessed, just continue
-	repotree="repo"
+	repotree="$WORKDIR/repo"
 fi
 
 # deal with pristine-tar
@@ -158,7 +161,7 @@ fi
 
 # move created files to outdir
 r=0
-find . -maxdepth 1 -type f -cnewer timestamp -exec mv {} "$_outdir/" \; || r=$?
+find $WORKDIR -maxdepth 1 -type f -cnewer $TIMESTAMP -exec mv {} "$_outdir/" \; || r=$?
 if [ $r != 0 ]; then
 	echo "An error occured while moving the generated files to their destination!"
 	cleanup
