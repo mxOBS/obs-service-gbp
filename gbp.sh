@@ -4,7 +4,7 @@ set -x
 
 # parse arguments
 s=0
-OPTIONS=`getopt -n "$0" -o "" -l "outdir:,url:,debian-branch:,revision:,enable-submodules:" -- "$@"` || s=$?
+OPTIONS=`getopt -n "$0" -o "" -l "outdir:,url:,debian-branch:,revision:,enable-submodules:,enable-pristine-tar:" -- "$@"` || s=$?
 if [ $s -ne 0 ]; then
 	# usage
 	exit 1
@@ -16,6 +16,7 @@ _url=
 _debianbranch=master
 _revision=HEAD
 _enablesubmodules=no
+_enablepristinetar=no
 eval set -- "$OPTIONS"
 while true; do
 	case $1 in
@@ -39,6 +40,10 @@ while true; do
 			_enablesubmodules=$2
 			shift 2
 			;;
+		--enable-pristine-tar)
+			_enablepristinetar=$2
+			shift 2
+			;;
 		--)
 			shift
 			break
@@ -47,7 +52,9 @@ while true; do
 done
 
 # check if all required arguments have been given
-if [ -z "$_outdir" ] || [ -z "$_url" ] || ( [ "x$_enablesubmodules" != "xno" ] && [ "x$_enablesubmodules" != "xyes" ] ) ; then
+if [ -z "$_outdir" ] || [ -z "$_url" ] \
+|| ( [ "x$_enablesubmodules" != "xno" ] && [ "x$_enablesubmodules" != "xyes" ] ) \
+|| ( [ "x$_enablepristinetar" != "xno" ] && [ "x$_enablepristinetar" != "xyes" ] ); then
 	echo "Mandatory arguments missing, or have invalid values!"
 	exit 1
 fi
@@ -124,10 +131,24 @@ else
 	repotree="repo"
 fi
 
+# deal with pristine-tar
+if [ "x$_enablepristinetar" = "xyes" ]; then
+	# make sure the pristine-tar branch exists locally
+	pushd "$repotree"
+	git branch --track pristine-tar origin/pristine-tar
+	popd
+
+	# generate argument to gbp-buildpackage
+	PRISTINETAR=--git-pristine-tar
+else
+	# generate argument to gbp-buildpackage
+	PRISTINETAR=--git-no-pristine-tar
+fi
+
 # build source package
 pushd "$repotree"
 r=0
-gbp buildpackage --git-ignore-branch --git-builder="dpkg-source -i.git -b ." || r=$?
+gbp buildpackage --git-ignore-branch --git-builder="dpkg-source -i.git -b ." $PRISTINETAR || r=$?
 popd
 if [ $r != 0 ]; then
 	echo "An error occured while creating the source package!"

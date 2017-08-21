@@ -12,6 +12,9 @@
     <description>The GIT commit or tag to use.</description>
   </parameter>
   <parameter name="enable-submodules">
-    <description>Wether to fetch submodules [yes/no]</description>
+    <description>Wether to fetch submodules [yes/no]; default: no</description>
+  </parameter>
+  <parameter name="enable-pristine-tar">
+    <description>Wether to create .orig.tar* with pristine-tar [yes/no]; default: no</description>
   </parameter>
 </service>
