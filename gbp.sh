@@ -4,7 +4,7 @@ set -x
 
 # parse arguments
 s=0
-OPTIONS=`getopt -n "$0" -o "" -l "outdir:,url:,debian-branch:,revision:,enable-submodules:,enable-pristine-tar:" -- "$@"` || s=$?
+OPTIONS=`getopt -n "$0" -o "" -l "outdir:,url:,debian-branch:,revision:,enable-submodules:,enable-pristine-tar:,compression:" -- "$@"` || s=$?
 if [ $s -ne 0 ]; then
 	# usage
 	exit 1
@@ -17,6 +17,7 @@ _debianbranch=master
 _revision=HEAD
 _enablesubmodules=no
 _enablepristinetar=no
+_compression=auto
 eval set -- "$OPTIONS"
 while true; do
 	case $1 in
@@ -42,6 +43,10 @@ while true; do
 			;;
 		--enable-pristine-tar)
 			_enablepristinetar=$2
+			shift 2
+			;;
+		--compression)
+			_compression=$2
 			shift 2
 			;;
 		--)
@@ -148,10 +153,13 @@ else
 	PRISTINETAR=--git-no-pristine-tar
 fi
 
+# generate compression argument to gbp buildpackage
+COMPRESSION="--git-compression=$_compression"
+
 # build source package
 pushd "$repotree"
 r=0
-gbp buildpackage --git-ignore-branch --git-builder="dpkg-source -i.git -b ." $PRISTINETAR || r=$?
+gbp buildpackage --git-ignore-branch --git-builder="dpkg-source -i.git -b ." $PRISTINETAR $COMPRESSION || r=$?
 popd
 if [ $r != 0 ]; then
 	echo "An error occured while creating the source package!"

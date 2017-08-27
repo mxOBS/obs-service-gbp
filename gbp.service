@@ -17,4 +17,7 @@
   <parameter name="enable-pristine-tar">
     <description>Wether to create .orig.tar* with pristine-tar [yes/no]; default: no</description>
   </parameter>
+  <parameter name="compression">
+    <description>What compression algorithm to use for the source tarballs [xz/gzip/...]; default: auto</description>
+  </parameter>
 </service>
