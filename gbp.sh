@@ -159,7 +159,7 @@ COMPRESSION="--git-compression=$_compression"
 # build source package
 pushd "$repotree"
 r=0
-gbp buildpackage --git-ignore-branch --git-builder="dpkg-source -i.git -b ." $PRISTINETAR $COMPRESSION || r=$?
+gbp buildpackage --git-ignore-branch --git-export-dir= --git-builder="dpkg-source -i.git -b ." $PRISTINETAR $COMPRESSION || r=$?
 popd
 if [ $r != 0 ]; then
 	echo "An error occured while creating the source package!"
